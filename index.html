@@ -1,310 +1,364 @@
 <?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>תיקון קוראים</title>
-    <meta charset="UTF-8"/>
-    <style type="text/css">
-        .c9{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
-        .c8{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
-        .c3{padding-top:14pt;padding-bottom:4pt;line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:justify}
-        .c6{padding-top:16pt;padding-bottom:4pt;line-height:1.15;orphans:2;widows:2;text-align:justify}
-        .c4{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
-        .c11{padding-top:18pt;padding-bottom:6pt;line-height:1.15;orphans:2;widows:2;text-align:justify}
-        .c2{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
-        .c0{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:justify;height:11pt}
-        .c1{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:justify}
-        body {
-            direction: rtl;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-feature-settings: "tnum";
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            padding: 2%;
-            border-radius: 1%;
-            width: 96%;
-        }
-        .row {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-        }
-        .cols-row {
-          display:inline-flex;
-        }
-        .column {
-          width: 38%;
-          word-break: break-word;
-        }
-        .title{padding-top:0pt;padding-bottom:3pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
-        .subtitle{padding-top:0pt;padding-bottom:16pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
-        h1{padding-top:20pt;padding-bottom:6pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
-        h2{padding-top:18pt;padding-bottom:6pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
-        h3{padding-top:16pt;padding-bottom:4pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
-        h4{padding-top:14pt;padding-bottom:4pt;line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:justify}
-        h5{padding-top:12pt;padding-bottom:4pt;line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:justify}
-        .tab {
-            display: inline-block;
-            padding-left: 3em;
-        }
-        .space {
-            display: inline-block;
-            padding-left: 1em;
-        }
-        .pad-bottom {
-            padding-bottom: 1em;
-        }
-        p {
-          padding: 0;
-          margin: 0;
-          text-align: justify;
-          text-align-last: justify;
-        }
-        
-    </style>
-    <script>
-
-      const spaceWord = " <span class=\"tab\"> </span> ";
-      const specialChars = ['c', 'n', 'o'];
-      const indexHelperMap = new Map();
-
-      function getTextWidth(text, font) {
-        let canvas = document.createElement("canvas");
-        let ctx = canvas.getContext("2d");
-        ctx.font = font || getComputedStyle(document.body).font;
-        return ctx.measureText(text).actualBoundingBoxRight * 2;
-      }
-
-      function setSpecial(text, index) {
-        ret = false;
-        for (const c of specialChars) {
-          if (text.includes(c)) {
-            ret = true;
-            if (indexHelperMap.has(index)) {
-              indexHelperMap.set(index, indexHelperMap.get(index) + c);
-            } else {
-              indexHelperMap.set(index, c);
-            }
-          }
-        }
-        return ret;
-      }
-
-      function fixIndent() {
-        const origParagraphs = document.querySelectorAll('div.column.original p');
-        const modParagraphs = document.querySelectorAll('div.column.modified p');
-        const origDiv = document.getElementById("original-div");
-        const modifiedDiv = document.getElementById("modified-div");
-        const lineWidthPX = Math.min(origDiv.clientWidth, modifiedDiv.clientWidth) - 4;
-        
-        let lineLen = 0;
-        let origLine = [], modLine = [], origLineArray = [], modLineArray = [];
-        // let origParagraphToken = [], modParagraphToken = [];
-        let wordIndex = 0;
-        let fixParagraph = 0;
-        const f = getComputedStyle(origDiv).font;
-        const spaceSize = Math.ceil(getTextWidth('i'), f) / 2;
-
-        for (let i = 0; i < origParagraphs.length; i++) {
-          let origWords = origParagraphs[i].textContent.trim().split(/\s+/);
-          let modWords = modParagraphs[i].textContent.trim().split(/\s+/);
-          for (let origWordIndex = 0, modWordIndex = 0; origWordIndex < origWords.length; origWordIndex++) {
-            // closed paragraph, insert 6 spaces
-            if (setSpecial(origWords[origWordIndex], wordIndex)) {
-              continue;
-            }
-            wordIndex++;
-            
-            text = origWords[origWordIndex];
-            modText = modWords[modWordIndex];
-            let wordWidth = Math.ceil(getTextWidth(text, getComputedStyle(origDiv).font));
-
-            if ((indexHelperMap.has(wordIndex - 1)) && (indexHelperMap.get(wordIndex - 1).includes('c'))){
-              let origSize = origLine.length, modSize = modLine.length;
-              let word = origLine.pop();
-              let modWord = modLine.pop();
-              
-              if (origSize == 0) {
-                word = origLineArray[origLineArray.length - 1].pop();
-              }
-
-              if (modSize == 0) {
-                modWord = modLineArray[modLineArray.length - 1].pop();
-              }
-
-              text = word + spaceWord + text;
-              modText = modWord + spaceWord + modText;
-              wordWidth = wordWidth + Math.ceil(getTextWidth(word, getComputedStyle(origDiv).font)) + (spaceSize * 6);
-              lineLen = Math.ceil(getTextWidth(origLine.join(' '), getComputedStyle(origDiv).font));
-            }
-
-            if (lineLen + wordWidth + (origLine.length > 0 ? spaceSize : 0) > lineWidthPX){
-              origLineArray.push(origLine);
-              origLine = [], lineLen = 0;
-
-              modLineArray.push(modLine);
-              modLine = [];
-            }
-            
-            origLine.push(text);
-            if (!text.includes('׀')) {
-              modLine.push(modText);
-              modWordIndex++;
-            }
-            
-            lineLen += wordWidth + (origLine.length > 1 ? spaceSize : 0);
-          }
-        }
-        origLineArray.push(origLine);
-        modLineArray.push(modLine);
-
-        origDiv.innerHTML = origLineArray.map(line => `<p>${line.join(' ')}</p>`).join('');
-        modifiedDiv.innerHTML = modLineArray.map(line => `<p>${line.join(' ')}</p>`).join('');
-      }
-
-        window.addEventListener('resize', fixIndent);
-        window.addEventListener('DOMContentLoaded', fixIndent);
-        // document.addEventListener('scrollend', fixIndent);
-    </script>
+  <title>תיקון קוראים</title>
+  <meta charset="UTF-8"/>
+  <style type="text/css">
+    .c9{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
+    .c8{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
+    .c3{padding-top:14pt;padding-bottom:4pt;line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:justify}
+    .c6{padding-top:16pt;padding-bottom:4pt;line-height:1.15;orphans:2;widows:2;text-align:justify}
+    .c4{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
+    .c11{padding-top:18pt;padding-bottom:6pt;line-height:1.15;orphans:2;widows:2;text-align:justify}
+    .c2{font-weight:400;text-decoration:none;vertical-align:baseline;font-style:normal}
+    .c0{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:justify;height:11pt}
+    .c1{padding-top:0pt;padding-bottom:0pt;line-height:1.15;orphans:2;widows:2;text-align:justify}
+    body {
+      direction: rtl;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-feature-settings: "tnum";
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      padding: 2%;
+      border-radius: 1%;
+      width: 96%;
+    }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .cols-row {
+      display:inline-flex;
+    }
+    .column {
+      width: 48%;
+      word-break: break-word;
+    }
+    .title{padding-top:0pt;padding-bottom:3pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
+    .subtitle{padding-top:0pt;padding-bottom:16pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
+    h1{padding-top:20pt;padding-bottom:6pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
+    h2{padding-top:18pt;padding-bottom:6pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
+    h3{padding-top:16pt;padding-bottom:4pt;line-height:1.15;page-break-after:always;orphans:2;widows:2;text-align:justify}
+    h4{padding-top:14pt;padding-bottom:4pt;line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:justify}
+    h5{padding-top:12pt;padding-bottom:4pt;line-height:1.15;page-break-after:avoid;orphans:2;widows:2;text-align:justify}
+    .tab {
+      display: inline-block;
+      padding-left: 3em;
+    }
+    .space {
+      display: inline-block;
+      padding-left: 1em;
+    }
+    .pad-bottom {
+      padding-bottom: 1em;
+    }
+    p {
+      padding: 0;
+      margin: 0;
+      text-align: justify;
+      text-align-last: justify;
+    }
     
+  </style>
+  <script>
+    
+    const spaceWord = " <span class=\"tab\"> </span> ";
+    const specialChars = ['c', 'n', 'o'];
+    const indexHelperMap = new Map();
+    
+    function getTextWidth(text, font) {
+      let canvas = document.createElement("canvas");
+      let ctx = canvas.getContext("2d");
+      ctx.font = font || getComputedStyle(document.body).font;
+      return ctx.measureText(text).actualBoundingBoxRight * 2;
+    }
+    
+    function setSpecial(text, index) {
+      ret = false;
+      for (const c of specialChars) {
+        if (text.includes(c)) {
+          ret = true;
+          if (indexHelperMap.has(index)) {
+            indexHelperMap.set(index, indexHelperMap.get(index) + c);
+          } else {
+            indexHelperMap.set(index, c);
+          }
+        }
+      }
+      return ret;
+    }
+    
+    function fixIndent() {
+      const origParagraphs = document.querySelectorAll('div.column.original p');
+      const modParagraphs = document.querySelectorAll('div.column.modified p');
+      const origDiv = document.getElementById("original-div");
+      const modifiedDiv = document.getElementById("modified-div");
+      const lineWidthPX = Math.min(origDiv.clientWidth, modifiedDiv.clientWidth) - 8;
+      
+      let lineLen = 0;
+      let origLine = [], modLine = [], origLineArray = [], modLineArray = [];
+      // let origParagraphToken = [], modParagraphToken = [];
+      let wordIndex = 0;
+      let fixParagraph = 0;
+      const f = getComputedStyle(origDiv).font;
+      const spaceSize = Math.ceil(getTextWidth('i'), f) / 2;
+      
+      for (let i = 0; i < origParagraphs.length; i++) {
+        let origWords = origParagraphs[i].textContent.trim().split(/\s+/);
+        let modWords = modParagraphs[i].textContent.trim().split(/\s+/);
+        for (let origWordIndex = 0, modWordIndex = 0; origWordIndex < origWords.length; origWordIndex++) {
+          // closed paragraph, insert 6 spaces
+          if (setSpecial(origWords[origWordIndex], wordIndex)) {
+            continue;
+          }
+          wordIndex++;
+          
+          text = origWords[origWordIndex];
+          modText = modWords[modWordIndex];
+          let wordWidth = Math.ceil(getTextWidth(text, getComputedStyle(origDiv).font));
+          
+          if ((indexHelperMap.has(wordIndex - 1)) && (indexHelperMap.get(wordIndex - 1).includes('c'))){
+            let origSize = origLine.length, modSize = modLine.length;
+            let word = origLine.pop();
+            let modWord = modLine.pop();
+            
+            if (origSize == 0) {
+              word = origLineArray[origLineArray.length - 1].pop();
+            }
+            
+            if (modSize == 0) {
+              modWord = modLineArray[modLineArray.length - 1].pop();
+            }
+            
+            text = word + spaceWord + text;
+            modText = modWord + spaceWord + modText;
+            wordWidth = wordWidth + Math.ceil(getTextWidth(word, getComputedStyle(origDiv).font)) + (spaceSize * 6);
+            lineLen = Math.ceil(getTextWidth(origLine.join(' '), getComputedStyle(origDiv).font));
+          }
+          
+          if (lineLen + wordWidth + (origLine.length > 0 ? spaceSize : 0) > lineWidthPX){
+            origLineArray.push(origLine);
+            origLine = [], lineLen = 0;
+            
+            modLineArray.push(modLine);
+            modLine = [];
+          }
+          
+          origLine.push(text);
+          if (!text.includes('׀')) {
+            modLine.push(modText);
+            modWordIndex++;
+          }
+          
+          lineLen += wordWidth + (origLine.length > 1 ? spaceSize : 0);
+        }
+      }
+      origLineArray.push(origLine);
+      modLineArray.push(modLine);
+      
+      origDiv.innerHTML = origLineArray.map(line => `<p>${line.join(' ')}</p>`).join('');
+      modifiedDiv.innerHTML = modLineArray.map(line => `<p>${line.join(' ')}</p>`).join('');
+    }
+    
+    window.addEventListener('resize', fixIndent);
+    window.addEventListener('DOMContentLoaded', fixIndent);
+    // document.addEventListener('scrollend', fixIndent);
+    
+    // start of duff-de-fun pager
+    // Function to scroll based on which side of the div was clicked
+    function scrollBasedOnClickPosition(event) {
+      // Get all paragraphs within the div
+      const paragraphs = document.querySelectorAll('div.column p');
+      if (paragraphs.length === 0) return;
+      
+      // Get the viewport dimensions
+      const viewportHeight = window.innerHeight;
+      const scrollTop = window.scrollY || window.pageYOffset;
+      const viewportBottom = scrollTop + viewportHeight;
+      
+      // Determine if click was on left or right side
+      const clickX = event.clientX;
+      const isRightSide = clickX > window.innerWidth / 2;
+      
+      console.log('isRightSide: ', isRightSide, ", clickX: ", clickX, ", width: ", window.innerWidth / 2);
+      if (isRightSide) {
+        // RIGHT SIDE CLICK: Scroll down to first hidden paragraph
+        for (let i = 0; i < paragraphs.length; i++) {
+          const paragraph = paragraphs[i];
+          const rect = paragraph.getBoundingClientRect();
+          const paragraphTop = rect.bottom + scrollTop;
+          
+          // If the top of the paragraph is below the bottom of the viewport
+          if (paragraphTop > viewportBottom) {
+            // Scroll to this paragraph
+            paragraph.scrollIntoView({ behavior: "instant", block: "start", inline: "nearest" });
+            return;
+          }
+        }
+        console.log('All paragraphs are already visible in the viewport');
+      } else {
+        window.scrollBy(0, -window.innerHeight);
+        // LEFT SIDE CLICK: Scroll up to the previous paragraph
+        for (let i = paragraphs.length - 1; i >= 0; i--) {
+          const paragraph = paragraphs[i];
+          const rect = paragraph.getBoundingClientRect();
+          
+          // If paragraph is above the current viewport (negative top position)
+          if (rect.top < 0) {
+            // Scroll to this paragraph
+            paragraphs[i + 1].scrollIntoView({ behavior: "instant", block: "end", inline: "nearest" });
+            return;
+          }
+        }
+        console.log('Already at the top or all paragraphs are visible');
+        
+      }
+    }
+    
+    // Add a click event listener to your div
+    window.addEventListener('click', scrollBasedOnClickPosition);
+  </script>
+  
 </head>
 <body>
-    <h1 id="h.d92r23ayzpnv">
-        תיקון קוראים
-    </h1>
-    <h2 class="c11"  id="h.o9wid4tsr8ea">
-        <span class="c8">תורה</span>
-    </h2>
-    <h2 class="c11">
-      <span class="c8">נביאים</span>
-    </h2>
-    <h2 class="c11">
-      כתובים
-    </h2>
-    <h3 class="c11">
-      אסתר
-    </h3>
-    <div class="container">
-        <div class="row pad-bottom">
-            <div class="column original" style="text-align: end;">אסתר</div>
-            <div class="column modified">אסתר</div>
-        </div>
-        <div class="row cols-row">
-            <div class="column original" id="original-div">
-                <p>
-                    וַיְהִ֖י בִּימֵ֣י אֲחַשְׁוֵר֑וֹשׁ ה֣וּא אֲחַשְׁוֵר֗וֹשׁ הַמֹּלֵךְ֙ מֵהֹ֣דּוּ וְעַד־ כּ֔וּשׁ שֶׁ֛בַע וְעֶשְׂרִ֥ים וּמֵאָ֖ה מְדִינָֽה׃
-                    בַּיָּמִ֖ים הָהֵ֑ם כְּשֶׁ֣בֶת ׀ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֗וֹשׁ עַ֚ל כִּסֵּ֣א מַלְכוּת֔וֹ אֲשֶׁ֖ר בְּשׁוּשַׁ֥ן הַבִּירָֽה׃
-                    בִּשְׁנַ֤ת שָׁלוֹשׁ֙ לְמָלְכ֔וֹ עָשָׂ֣ה מִשְׁתֶּ֔ה לְכָל־ שָׂרָ֖יו וַֽעֲבָדָ֑יו חֵ֣יל ׀ פָּרַ֣ס וּמָדַ֗י הַֽפַּרְתְּמִ֛ים וְשָׂרֵ֥י הַמְּדִינ֖וֹת לְפָנָֽיו׃
-                    בְּהַרְאֹת֗וֹ אֶת־ עֹ֨שֶׁר֙ כְּב֣וֹד מַלְכוּת֔וֹ וְאֶ֨ת־ יְקָ֔ר תִּפְאֶ֖רֶת גְּדוּלָּת֑וֹ יָמִ֣ים רַבִּ֔ים שְׁמוֹנִ֥ים וּמְאַ֖ת יֽוֹם׃
-                    וּבִמְל֣וֹאת ׀ הַיָּמִ֣ים הָאֵ֗לֶּה עָשָׂ֣ה הַמֶּ֡לֶךְ לְכָל־ הָעָ֣ם הַנִּמְצְאִים֩ בְּשׁוּשַׁ֨ן הַבִּירָ֜ה לְמִגָּד֧וֹל וְעַד־ קָטָ֛ן מִשְׁתֶּ֖ה שִׁבְעַ֣ת יָמִ֑ים בַּֽחֲצַ֕ר גִּנַּ֥ת בִּיתַ֖ן הַמֶּֽלֶךְ׃
-                    ח֣וּר ׀ כַּרְפַּ֣ס וּתְכֵ֗לֶת אָחוּז֙ בְּחַבְלֵי־ ב֣וּץ וְאַרְגָּמָ֔ן עַל־ גְּלִ֥ילֵי כֶ֖סֶף וְעַמּ֣וּדֵי שֵׁ֑שׁ מִטּ֣וֹת ׀ זָהָ֣ב וָכֶ֗סֶף עַ֛ל רִֽצְפַ֥ת בַּֽהַט־ וָשֵׁ֖שׁ וְדַ֥ר וְסֹחָֽרֶת׃
-                    וְהַשְׁקוֹת֙ בִּכְלֵ֣י זָהָ֔ב וְכֵלִ֖ים מִכֵּלִ֣ים שׁוֹנִ֑ים וְיֵ֥ין מַלְכ֛וּת רָ֖ב כְּיַ֥ד הַמֶּֽלֶךְ׃
-                    וְהַשְּׁתִיָּ֥ה כַדָּ֖ת אֵ֣ין אֹנֵ֑ס כִּי־ כֵ֣ן ׀ יִסַּ֣ד הַמֶּ֗לֶךְ עַ֚ל כָּל־ רַ֣ב בֵּית֔וֹ לַֽעֲשׂ֖וֹת כִּרְצ֥וֹן אִישׁ־ וָאִֽישׁ׃
-c
-                       גַּ֚ם וַשְׁתִּ֣י הַמַּלְכָּ֔ה עָֽשְׂתָ֖ה מִשְׁתֵּ֣ה נָשִׁ֑ים בֵּ֚ית הַמַּלְכ֔וּת אֲשֶׁ֖ר לַמֶּ֥לֶךְ אֲחַשְׁוֵרֽוֹשׁ׃
-                    בַּיּוֹם֙ הַשְּׁבִיעִ֔י כְּט֥וֹב לֵב־ הַמֶּ֖לֶךְ בַּיָּ֑יִן אָמַ֡ר לִ֠מְהוּמָן בִּזְּתָ֨א חַרְבוֹנָ֜א בִּגְתָ֤א וַֽאֲבַגְתָא֙ זֵתַ֣ר וְכַרְכַּ֔ס שִׁבְעַת֙ הַסָּ֣רִיסִ֔ים הַמְשָׁ֣רְתִ֔ים אֶת־ פְּנֵ֖י הַמֶּ֥לֶךְ אֲחַשְׁוֵרֽוֹשׁ׃
-                    לְ֠הָבִיא אֶת־ וַשְׁתִּ֧י הַמַּלְכָּ֛ה לִפְנֵ֥י הַמֶּ֖לֶךְ בְּכֶ֣תֶר מַלְכ֑וּת לְהַרְא֨וֹת הָֽעַמִּ֤ים וְהַשָּׂרִים֙ אֶת־ יָפְיָ֔הּ כִּֽי־ טוֹבַ֥ת מַרְאֶ֖ה הִֽיא׃
-                    וַתְּמָאֵ֞ן הַמַּלְכָּ֣ה וַשְׁתִּ֗י לָבוֹא֙ בִּדְבַ֣ר הַמֶּ֔לֶךְ אֲשֶׁ֖ר בְּיַ֣ד הַסָּֽרִיסִ֑ים וַיִּקְצֹ֤ף הַמֶּ֨לֶךְ֙ מְאֹ֔ד וַֽחֲמָת֖וֹ בָּֽעֲרָ֥ה בֽוֹ׃
-c
-                     וַיֹּ֣אמֶר הַמֶּ֔לֶךְ לַֽחֲכָמִ֖ים יֹֽדְעֵ֣י הָֽעִתִּ֑ים כִּי־ כֵן֙ דְּבַ֣ר הַמֶּ֔לֶךְ לִפְנֵ֕י כָּל־ יֹֽדְעֵ֖י דָּ֥ת וָדִֽין׃
-                    וְהַקָּרֹ֣ב אֵלָ֗יו כַּרְשְׁנָ֤א שֵׁתָר֙ אַדְמָ֣תָא תַרְשִׁ֔ישׁ מֶ֥רֶס מַרְסְנָ֖א מְמוּכָ֑ן שִׁבְעַ֞ת שָׂרֵ֣י ׀ פָּרַ֣ס וּמָדַ֗י רֹאֵי֙ פְּנֵ֣י הַמֶּ֔לֶךְ הַיֹּֽשְׁבִ֥ים רִֽאשֹׁנָ֖ה בַּמַּלְכֽוּת׃
-                    כְּדָת֙ מַֽה־ לַּעֲשׂ֔וֹת בַּמַּלְכָּ֖ה וַשְׁתִּ֑י עַ֣ל ׀ אֲשֶׁ֣ר לֹֽא־ עָשְׂתָ֗ה אֶֽת־ מַאֲמַר֙ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֔וֹשׁ בְּיַ֖ד הַסָּֽרִיסִֽים׃
-c
-                     וַיֹּ֣אמֶר מומכן מְמוּכָ֗ן לִפְנֵ֤י הַמֶּ֨לֶךְ֙ וְהַשָּׂרִ֔ים לֹ֤א עַל־ הַמֶּ֨לֶךְ֙ לְבַדּ֔וֹ עָֽוְתָ֖ה וַשְׁתִּ֣י הַמַּלְכָּ֑ה כִּ֤י עַל־ כָּל־ הַשָּׂרִים֙ וְעַל־ כָּל־ הָ֣עַמִּ֔ים אֲשֶׁ֕ר בְּכָל־ מְדִינ֖וֹת הַמֶּ֥לֶךְ אֲחַשְׁוֵרֽוֹשׁ׃
-                    כִּֽי־ יֵצֵ֤א דְבַר־ הַמַּלְכָּה֙ עַל־ כָּל־ הַנָּשִׁ֔ים לְהַבְז֥וֹת בַּעְלֵיהֶ֖ן בְּעֵֽינֵיהֶ֑ן בְּאָמְרָ֗ם הַמֶּ֣לֶךְ אֲחַשְׁוֵר֡וֹשׁ אָמַ֞ר לְהָבִ֨יא אֶת־ וַשְׁתִּ֧י הַמַּלְכָּ֛ה לְפָנָ֖יו וְלֹא־ בָֽאָה׃
-                    וְֽהַיּ֨וֹם הַזֶּ֜ה תֹּאמַ֣רְנָה ׀ שָׂר֣וֹת פָּֽרַס־ וּמָדַ֗י אֲשֶׁ֤ר שָֽׁמְעוּ֙ אֶת־ דְּבַ֣ר הַמַּלְכָּ֔ה לְכֹ֖ל שָׂרֵ֣י הַמֶּ֑לֶךְ וּכְדַ֖י בִּזָּי֥וֹן וָקָֽצֶף׃
-                     אִם־ עַל־ הַמֶּ֣לֶךְ ט֗וֹב יֵצֵ֤א דְבַר־ מַלְכוּת֙ מִלְּפָנָ֔יו וְיִכָּתֵ֛ב בְּדָתֵ֥י פָֽרַס־ וּמָדַ֖י וְלֹ֣א יַֽעֲב֑וֹר אֲשֶׁ֨ר לֹֽא־ תָב֜וֹא וַשְׁתִּ֗י לִפְנֵי֙ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֔וֹשׁ וּמַלְכוּתָהּ֙ יִתֵּ֣ן הַמֶּ֔לֶךְ לִרְעוּתָ֖הּ הַטּוֹבָ֥ה מִמֶּֽנָּה׃
-                    וְנִשְׁמַע֩ פִּתְגָ֨ם הַמֶּ֤לֶךְ אֲשֶֽׁר־ יַעֲשֶׂה֙ בְּכָל־ מַלְכוּת֔וֹ כִּ֥י רַבָּ֖ה הִ֑יא וְכָל־ הַנָּשִׁ֗ים יִתְּנ֤וּ יְקָר֙ לְבַעְלֵיהֶ֔ן לְמִגָּד֖וֹל וְעַד־ קָטָֽן׃
-                    וַיִּיטַב֙ הַדָּבָ֔ר בְּעֵינֵ֥י הַמֶּ֖לֶךְ וְהַשָּׂרִ֑ים וַיַּ֥עַשׂ הַמֶּ֖לֶךְ כִּדְבַ֥ר מְמוּכָֽן׃
-                     וַיִּשְׁלַ֤ח סְפָרִים֙ אֶל־ כָּל־ מְדִינ֣וֹת הַמֶּ֔לֶךְ אֶל־ מְדִינָ֤ה וּמְדִינָה֙ כִּכְתָבָ֔הּ וְאֶל־ עַ֥ם וָעָ֖ם כִּלְשׁוֹנ֑וֹ לִֽהְי֤וֹת כָּל־ אִישׁ֙ שֹׂרֵ֣ר בְּבֵית֔וֹ וּמְדַבֵּ֖ר כִּלְשׁ֥וֹן עַמּֽוֹ׃
-c
-                    </p>
-                    <p>
-                       אַחַר֙ הַדְּבָרִ֣ים הָאֵ֔לֶּה כְּשֹׁ֕ךְ חֲמַ֖ת הַמֶּ֣לֶךְ אֲחַשְׁוֵר֑וֹשׁ זָכַ֤ר אֶת־ וַשְׁתִּי֙ וְאֵ֣ת אֲשֶׁר־ עָשָׂ֔תָה וְאֵ֥ת אֲשֶׁר־ נִגְזַ֖ר עָלֶֽיהָ׃
-                       וַיֹּֽאמְר֥וּ נַעֲרֵֽי־ הַמֶּ֖לֶךְ מְשָֽׁרְתָ֑יו יְבַקְשׁ֥וּ לַמֶּ֛לֶךְ נְעָר֥וֹת בְּתוּל֖וֹת טוֹב֥וֹת מַרְאֶֽה׃
-                       וְיַפְקֵ֨ד הַמֶּ֣לֶךְ פְּקִידִים֮ בְּכָל־ מְדִינ֣וֹת מַלְכוּתוֹ֒ וְיִקְבְּצ֣וּ אֶת־ כָּל־ נַעֲרָֽה־ בְ֠תוּלָה טוֹבַ֨ת מַרְאֶ֜ה אֶל־ שׁוּשַׁ֤ן הַבִּירָה֙ אֶל־ בֵּ֣ית הַנָּשִׁ֔ים אֶל־ יַ֥ד הֵגֶ֛א סְרִ֥יס הַמֶּ֖לֶךְ שֹׁמֵ֣ר הַנָּשִׁ֑ים וְנָת֖וֹן תַּמְרֻֽקֵיהֶֽן׃
-                       וְהַֽנַּעֲרָ֗ה אֲשֶׁ֤ר תִּיטַב֙ בְּעֵינֵ֣י הַמֶּ֔לֶךְ תִּמְלֹ֖ךְ תַּ֣חַת וַשְׁתִּ֑י וַיִּיטַ֧ב הַדָּבָ֛ר בְּעֵינֵ֥י הַמֶּ֖לֶךְ וַיַּ֥עַשׂ כֵּֽן׃
-c
-                       אִ֣ישׁ יְהוּדִ֔י הָיָ֖ה בְּשׁוּשַׁ֣ן הַבִּירָ֑ה וּשְׁמ֣וֹ מָרְדֳּכַ֗י בֶּ֣ן יָאִ֧יר בֶּן־ שִׁמְעִ֛י בֶּן־ קִ֖ישׁ אִ֥ישׁ יְמִינִֽי׃
-                       אֲשֶׁ֤ר הָגְלָה֙ מִיר֣וּשָׁלַ֔יִם עִם־ הַגֹּלָה֙ אֲשֶׁ֣ר הָגְלְתָ֔ה עִ֖ם יְכָנְיָ֣ה מֶֽלֶךְ־ יְהוּדָ֑ה אֲשֶׁ֣ר הֶגְלָ֔ה נְבֽוּכַדְנֶצַּ֖ר מֶ֥לֶךְ בָּבֶֽל׃
-                       וַיְהִ֨י אֹמֵ֜ן אֶת־ הֲדַסָּ֗ה הִ֤יא אֶסְתֵּר֙ בַּת־ דֹּד֔וֹ כִּ֛י אֵ֥ין לָ֖הּ אָ֣ב וָאֵ֑ם וְהַנַּֽעֲרָ֤ה יְפַת־ תֹּ֨אַר֙ וְטוֹבַ֣ת מַרְאֶ֔ה וּבְמ֤וֹת אָבִ֨יהָ֙ וְאִמָּ֔הּ לְקָחָ֧הּ מָרְדֳּכַ֛י ל֖וֹ לְבַֽת׃
-                       וַיְהִ֗י בְּהִשָּׁמַ֤ע דְּבַר־ הַמֶּ֨לֶךְ֙ וְדָת֔וֹ וּֽבְהִקָּבֵ֞ץ נְעָר֥וֹת רַבּ֛וֹת אֶל־ שׁוּשַׁ֥ן הַבִּירָ֖ה אֶל־ יַ֣ד הֵגָ֑י וַתִּלָּקַ֤ח אֶסְתֵּר֙ אֶל־ בֵּ֣ית הַמֶּ֔לֶךְ אֶל־ יַ֥ד הֵגַ֖י שֹׁמֵ֥ר הַנָּשִֽׁים׃
-                       וַתִּיטַ֨ב הַנַּֽעֲרָ֣ה בְעֵינָיו֮ וַתִּשָּׂ֣א חֶ֣סֶד לְפָנָיו֒ וַ֠יְבַהֵל אֶת־ תַּמְרוּקֶ֤יהָ וְאֶת־ מָֽנוֹתֶ֨הָ֙ לָתֵ֣ת לָ֔הּ וְאֵת֙ שֶׁ֣בַע הַנְּעָר֔וֹת הָֽרְאֻי֥וֹת לָֽתֶת־ לָ֖הּ מִבֵּ֣ית הַמֶּ֑לֶךְ וַיְשַׁנֶּ֧הָ וְאֶת־ נַֽעֲרוֹתֶ֛יהָ לְט֖וֹב בֵּ֥ית הַנָּשִֽׁים׃ 
-                      לֹֽא־ הִגִּ֣ידָה אֶסְתֵּ֔ר אֶת־ עַמָּ֖הּ וְאֶת־ מֽוֹלַדְתָּ֑הּ כִּ֧י מָרְדֳּכַ֛י צִוָּ֥ה עָלֶ֖יהָ אֲשֶׁ֥ר לֹֽא־ תַגִּֽיד׃ 
-                      וּבְכָל־ י֣וֹם וָי֔וֹם מָרְדֳּכַי֙ מִתְהַלֵּ֔ךְ לִפְנֵ֖י חֲצַ֣ר בֵּית־ הַנָּשִׁ֑ים לָדַ֨עַת֙ אֶת־ שְׁל֣וֹם אֶסְתֵּ֔ר וּמַה־ יֵּֽעָשֶׂ֖ה בָּֽהּ׃ 
-                      וּבְהַגִּ֡יעַ תֹּר֩ נַֽעֲרָ֨ה וְנַֽעֲרָ֜ה לָב֣וֹא ׀ אֶל־ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֗וֹשׁ מִקֵּץ֩ הֱי֨וֹת לָ֜הּ כְּדָ֤ת הַנָּשִׁים֙ שְׁנֵ֣ים עָשָׂ֣ר חֹ֔דֶשׁ כִּ֛י כֵּ֥ן יִמְלְא֖וּ יְמֵ֣י מְרֽוּקֵיהֶ֑ן שִׁשָּׁ֤ה חֳדָשִׁים֙ בְּשֶׁ֣מֶן הַמֹּ֔ר וְשִׁשָּׁ֤ה חֳדָשִׁים֙ בַּבְּשָׂמִ֔ים וּבְתַמְרוּקֵ֖י הַנָּשִֽׁים׃ 
-                      וּבָזֶ֕ה הַֽנַּעֲרָ֖ה בָּאָ֣ה אֶל־ הַמֶּ֑לֶךְ אֵת֩ כָּל־ אֲשֶׁ֨ר תֹּאמַ֜ר יִנָּ֤תֵֽן לָהּ֙ לָב֣וֹא עִמָּ֔הּ מִבֵּ֥ית הַנָּשִׁ֖ים עַד־ בֵּ֥ית הַמֶּֽלֶךְ׃ 
-                      בָּעֶ֣רֶב ׀ הִ֣יא בָאָ֗ה וּ֠בַבֹּקֶר הִ֣יא שָׁבָ֞ה אֶל־ בֵּ֤ית הַנָּשִׁים֙ שֵׁנִ֔י אֶל־ יַ֧ד שַֽׁעַשְׁגַ֛ז סְרִ֥יס הַמֶּ֖לֶךְ שֹׁמֵ֣ר הַפִּֽילַגְשִׁ֑ים לֹֽא־ תָב֥וֹא עוֹד֙ אֶל־ הַמֶּ֔לֶךְ כִּ֣י אִם־ חָפֵ֥ץ בָּ֛הּ הַמֶּ֖לֶךְ וְנִקְרְאָ֥ה בְשֵֽׁם׃ 
-                      וּבְהַגִּ֣יעַ תֹּר־ אֶסְתֵּ֣ר בַּת־ אֲבִיחַ֣יִל דֹּ֣ד מָרְדֳּכַ֡י אֲשֶׁר֩ לָקַֽח־ ל֨וֹ לְבַ֜ת לָב֣וֹא אֶל־ הַמֶּ֗לֶךְ לֹ֤א בִקְשָׁה֙ דָּבָ֔ר כִּ֠י אִ֣ם אֶת־ אֲשֶׁ֥ר יֹאמַ֛ר הֵגַ֥י סְרִיס־ הַמֶּ֖לֶךְ שֹׁמֵ֣ר הַנָּשִׁ֑ים וַתְּהִ֤י אֶסְתֵּר֙ נֹשֵׂ֣את חֵ֔ן בְּעֵינֵ֖י כָּל־ רֹאֶֽיהָ׃ 
-                      וַתִּלָּקַ֨ח אֶסְתֵּ֜ר אֶל־ הַמֶּ֤לֶךְ אֲחַשְׁוֵרוֹשׁ֙ אֶל־ בֵּ֣ית מַלְכוּת֔וֹ בַּחֹ֥דֶשׁ הָֽעֲשִׂירִ֖י הוּא־ חֹ֣דֶשׁ טֵבֵ֑ת בִּשְׁנַת־ שֶׁ֖בַע לְמַלְכוּתֽוֹ׃ 
-                      וַיֶּֽאֱהַ֨ב הַמֶּ֤לֶךְ אֶת־ אֶסְתֵּר֙ מִכָּל־ הַנָּשִׁ֔ים וַתִּשָּׂא־ חֵ֥ן וָחֶ֛סֶד לְפָנָ֖יו מִכָּל־ הַבְּתוּל֑וֹת וַיָּ֤שֶׂם כֶּֽתֶר־ מַלְכוּת֙ בְּרֹאשָׁ֔הּ וַיַּמְלִיכֶ֖הָ תַּ֥חַת וַשְׁתִּֽי׃ 
-                      וַיַּ֨עַשׂ הַמֶּ֜לֶךְ מִשְׁתֶּ֣ה גָד֗וֹל לְכָל־ שָׂרָיו֙ וַֽעֲבָדָ֔יו אֵ֖ת מִשְׁתֵּ֣ה אֶסְתֵּ֑ר וַֽהֲנָחָ֤ה לַמְּדִינוֹת֙ עָשָׂ֔ה וַיִּתֵּ֥ן מַשְׂאֵ֖ת כְּיַ֥ד הַמֶּֽלֶךְ׃ 
-                      וּבְהִקָּבֵ֥ץ בְּתוּל֖וֹת שֵׁנִ֑ית וּמָרְדֳּכַ֖י יֹשֵׁ֥ב בְּשַֽׁעַר־ הַמֶּֽלֶךְ׃ 
-                      אֵ֣ין אֶסְתֵּ֗ר מַגֶּ֤דֶת מֽוֹלַדְתָּהּ֙ וְאֶת־ עַמָּ֔הּ כַּֽאֲשֶׁ֛ר צִוָּ֥ה עָלֶ֖יהָ מָרְדֳּכָ֑י וְאֶת־ מַֽאֲמַ֤ר מָרְדֳּכַי֙ אֶסְתֵּ֣ר עֹשָׂ֔ה כַּֽאֲשֶׁ֛ר הָֽיְתָ֥ה בְאָמְנָ֖ה אִתּֽוֹ׃ 
-c 
-                      בַּיָּמִ֣ים הָהֵ֔ם וּמָרְדֳּכַ֖י יוֹשֵׁ֣ב בְּשַֽׁעַר־ הַמֶּ֑לֶךְ קָצַף֩ בִּגְתָ֨ן וָתֶ֜רֶשׁ שְׁנֵֽי־ סָרִיסֵ֤י הַמֶּ֨לֶךְ֙ מִשֹּֽׁמְרֵ֣י הַסַּ֔ף וַיְבַקְשׁוּ֙ לִשְׁלֹ֣חַ יָ֔ד בַּמֶּ֖לֶךְ אֲחַשְׁוֵרֹֽשׁ׃ 
-                      וַיִּוָּדַ֤ע הַדָּבָר֙ לְמָרְדֳּכַ֔י וַיַּגֵּ֖ד לְאֶסְתֵּ֣ר הַמַּלְכָּ֑ה וַתֹּ֧אמֶר אֶסְתֵּ֛ר לַמֶּ֖לֶךְ בְּשֵׁ֥ם מָרְדֳּכָֽי׃ 
-                       וַיְבֻקַּ֤שׁ הַדָּבָר֙ וַיִּמָּצֵ֔א וַיִּתָּל֥וּ שְׁנֵיהֶ֖ם עַל־ עֵ֑ץ וַיִּכָּתֵ֗ב בְּסֵ֛פֶר דִּבְרֵ֥י הַיָּמִ֖ים לִפְנֵ֥י הַמֶּֽלֶךְ׃
-c
-                    </p>
-            </div>
-            <div class="column modified" id="modified-div">
-                <p>
-                    ויהי בימי אחשורוש הוא אחשורוש המלך מהדו ועד כוש שבע ועשרים ומאה מדינה
-                     בימים ההם כשבת המלך אחשורוש על כסא מלכותו אשר בשושן הבירה
-                    בשנת שלוש למלכו עשה משתה לכל שריו ועבדיו חיל  פרס ומדי הפרתמים ושרי המדינות לפניו בהראתו את עשר כבוד מלכותו ואת יקר תפארת גדולתו ימים רבים שמונים ומאת יום
-                    ובמלואת  הימים האלה עשה המלך לכל העם הנמצאים בשושן הבירה למגדול ועד קטן
-                     משתה שבעת ימים בחצר גנת ביתן המלך חור  כרפס ותכלת אחוז בחבלי בוץ וארגמן על גלילי כסף ועמודי שש מטות זהב וכסף על רצפת בהט ושש ודר וסחרת
-                    והשקות בכלי זהב וכלים מכלים שונים ויין מלכות רב כיד המלך והשתיה כדת אין אנס כי כן  יסד המלך על כל רב ביתו לעשות כרצון איש ואיש
-
-                    גם ושתי המלכה עשתה משתה נשים בית המלכות אשר למלך אחשורוש 
-                    ביום השביעי כטוב לב המלך ביין אמר למהומן בזתא חרבונא בגתא ואבגתא זתר וכרכס שבעת הסריסים המשרתים את פני המלך אחשורוש
-                    להביא את ושתי המלכה לפני המלך בכתר מלכות להראות העמים והשרים את יפיה כי טובת מראה היא 
-                    ותמאן המלכה ושתי לבוא בדבר המלך אשר ביד הסריסים ויקצף המלך מאד וחמתו בערה בו
-
-                    ויאמר המלך לחכמים ידעי העתים כי כן דבר המלך לפני כל ידעי דת ודין
-                    והקרב אליו כרשנא שתר אדמתא תרשיש מרס מרסנא ממוכן שבעת שרי  פרס ומדי ראי פני המלך הישבים ראשנה במלכות
-                    כדת מה לעשות במלכה ושתי על  אשר לא עשתה את מאמר המלך אחשורוש ביד הסריסים
-
-                    ויאמר מומכן ממוכן לפני המלך והשרים לא על המלך לבדו עותה ושתי המלכה כי על כל השרים ועל כל העמים אשר בכל מדינות המלך אחשורוש
-                    כי יצא דבר המלכה על כל הנשים להבזות בעליהן בעיניהן באמרם המלך אחשורוש אמר להביא את ושתי המלכה לפניו ולא באה
-                    והיום הזה תאמרנה  שרות פרס ומדי אשר שמעו את דבר המלכה לכל שרי המלך וכדי בזיון וקצף
-                    אם על המלך טוב יצא דבר מלכות מלפניו ויכתב בדתי פרס ומדי ולא יעבור אשר לא תבוא ושתי לפני המלך אחשורוש ומלכותה יתן המלך לרעותה הטובה ממנה
-                     ונשמע פתגם המלך אשר יעשה בכל מלכותו כי רבה היא וכל הנשים יתנו יקר לבעליהן למגדול ועד קטן
-                    וייטב הדבר בעיני המלך והשרים ויעש המלך כדבר ממוכן
-                    וישלח ספרים אל כל מדינות המלך אל מדינה ומדינה ככתבה ואל עם ועם כלשונו להיות כל איש שרר בביתו ומדבר כלשון עמו
-                  </p>
-                  <p>
-                    אחר הדברים האלה כשך חמת המלך אחשורוש זכר את ושתי ואת אשר עשתה ואת אשר נגזר עליה
-                       ויאמרו נערי המלך משרתיו יבקשו למלך נערות בתולות טובות מראה
-                       ויפקד המלך פקידים בכל מדינות מלכותו ויקבצו את כל נערה בתולה טובת מראה אל שושן הבירה אל בית הנשים אל יד הגא סריס המלך שמר הנשים ונתון תמרקיהן
-                       והנערה אשר תיטב בעיני המלך תמלך תחת ושתי וייטב הדבר בעיני המלך ויעש כן
-
-                       איש יהודי היה בשושן הבירה ושמו מרדכי בן יאיר בן שמעי בן קיש איש ימיני
-                       אשר הגלה מירושלים עם הגלה אשר הגלתה עם יכניה מלך יהודה אשר הגלה נבוכדנצר מלך בבל
-                       ויהי אמן את הדסה היא אסתר בת דדו כי אין לה אב ואם והנערה יפת תאר וטובת מראה ובמות אביה ואמה לקחה מרדכי לו לבת
-                       ויהי בהשמע דבר המלך ודתו ובהקבץ נערות רבות אל שושן הבירה אל יד הגי ותלקח אסתר אל בית המלך אל יד הגי שמר הנשים
-                       ותיטב הנערה בעיניו ותשא חסד לפניו ויבהל את תמרוקיה ואת מנותה לתת לה ואת שבע הנערות הראיות לתת לה מבית המלך וישנה ואת נערותיה לטוב בית הנשים 
-                      לא הגידה אסתר את עמה ואת מולדתה כי מרדכי צוה עליה אשר לא תגיד 
-                      ובכל יום ויום מרדכי מתהלך לפני חצר בית הנשים לדעת את שלום אסתר ומה יעשה בה 
-                      ובהגיע תר נערה ונערה לבוא אל המלך אחשורוש מקץ היות לה כדת הנשים שנים עשר חדש כי כן ימלאו ימי מרוקיהן ששה חדשים בשמן המר וששה חדשים בבשמים ובתמרוקי הנשים 
-                      ובזה הנערה באה אל המלך את כל אשר תאמר ינתן לה לבוא עמה מבית הנשים עד בית המלך 
-                      בערב היא באה ובבקר היא שבה אל בית הנשים שני אל יד שעשגז סריס המלך שמר הפילגשים לא תבוא עוד אל המלך כי אם חפץ בה המלך ונקראה בשם 
-                      ובהגיע תר אסתר בת אביחיל דד מרדכי אשר לקח לו לבת לבוא אל המלך לא בקשה דבר כי אם את אשר יאמר הגי סריס המלך שמר הנשים ותהי אסתר נשאת חן בעיני כל ראיה 
-                      ותלקח אסתר אל המלך אחשורוש אל בית מלכותו בחדש העשירי הוא חדש טבת בשנת שבע למלכותו 
-                      ויאהב המלך את אסתר מכל הנשים ותשא חן וחסד לפניו מכל הבתולות וישם כתר מלכות בראשה וימליכה תחת ושתי 
-                      ויעש המלך משתה גדול לכל שריו ועבדיו את משתה אסתר והנחה למדינות עשה ויתן משאת כיד המלך 
-                      ובהקבץ בתולות שנית ומרדכי ישב בשער המלך 
-                      אין אסתר מגדת מולדתה ואת עמה כאשר צוה עליה מרדכי ואת מאמר מרדכי אסתר עשה כאשר היתה באמנה אתו 
-
-                      בימים ההם ומרדכי יושב בשער המלך קצף בגתן ותרש שני סריסי המלך משמרי הסף ויבקשו לשלח יד במלך אחשורש 
-                      ויודע הדבר למרדכי ויגד לאסתר המלכה ותאמר אסתר למלך בשם מרדכי 
-                       ויבקש הדבר וימצא ויתלו שניהם על עץ ויכתב בספר דברי הימים לפני המלך
-                  </p>
-            </div>
-        </div>
+  <h1 id="h.d92r23ayzpnv">
+    תיקון קוראים
+  </h1>
+  <h2 class="c11"  id="h.o9wid4tsr8ea">
+    תורה
+  </h2>
+  <h2 class="c11">
+    נביאים
+  </h2>
+  <h2 class="c11">
+    כתובים
+  </h2>
+  <h3 class="c11">
+    אסתר
+  </h3>
+  <div class="container">
+    <div class="row pad-bottom">
+      <div class="column original" style="text-align: end;">אסתר</div>
+      <div class="column modified">אסתר</div>
     </div>
+    <div class="row cols-row">
+      <div class="column original" id="original-div">
+        <p>
+          וַיְהִ֖י בִּימֵ֣י אֲחַשְׁוֵר֑וֹשׁ ה֣וּא אֲחַשְׁוֵר֗וֹשׁ הַמֹּלֵךְ֙ מֵהֹ֣דּוּ וְעַד־ כּ֔וּשׁ שֶׁ֛בַע וְעֶשְׂרִ֥ים וּמֵאָ֖ה מְדִינָֽה׃
+          בַּיָּמִ֖ים הָהֵ֑ם כְּשֶׁ֣בֶת ׀ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֗וֹשׁ עַ֚ל כִּסֵּ֣א מַלְכוּת֔וֹ אֲשֶׁ֖ר בְּשׁוּשַׁ֥ן הַבִּירָֽה׃
+          בִּשְׁנַ֤ת שָׁלוֹשׁ֙ לְמָלְכ֔וֹ עָשָׂ֣ה מִשְׁתֶּ֔ה לְכָל־ שָׂרָ֖יו וַֽעֲבָדָ֑יו חֵ֣יל ׀ פָּרַ֣ס וּמָדַ֗י הַֽפַּרְתְּמִ֛ים וְשָׂרֵ֥י הַמְּדִינ֖וֹת לְפָנָֽיו׃
+          בְּהַרְאֹת֗וֹ אֶת־ עֹ֨שֶׁר֙ כְּב֣וֹד מַלְכוּת֔וֹ וְאֶ֨ת־ יְקָ֔ר תִּפְאֶ֖רֶת גְּדוּלָּת֑וֹ יָמִ֣ים רַבִּ֔ים שְׁמוֹנִ֥ים וּמְאַ֖ת יֽוֹם׃
+          וּבִמְל֣וֹאת ׀ הַיָּמִ֣ים הָאֵ֗לֶּה עָשָׂ֣ה הַמֶּ֡לֶךְ לְכָל־ הָעָ֣ם הַנִּמְצְאִים֩ בְּשׁוּשַׁ֨ן הַבִּירָ֜ה לְמִגָּד֧וֹל וְעַד־ קָטָ֛ן מִשְׁתֶּ֖ה שִׁבְעַ֣ת יָמִ֑ים בַּֽחֲצַ֕ר גִּנַּ֥ת בִּיתַ֖ן הַמֶּֽלֶךְ׃
+          ח֣וּר ׀ כַּרְפַּ֣ס וּתְכֵ֗לֶת אָחוּז֙ בְּחַבְלֵי־ ב֣וּץ וְאַרְגָּמָ֔ן עַל־ גְּלִ֥ילֵי כֶ֖סֶף וְעַמּ֣וּדֵי שֵׁ֑שׁ מִטּ֣וֹת ׀ זָהָ֣ב וָכֶ֗סֶף עַ֛ל רִֽצְפַ֥ת בַּֽהַט־ וָשֵׁ֖שׁ וְדַ֥ר וְסֹחָֽרֶת׃
+          וְהַשְׁקוֹת֙ בִּכְלֵ֣י זָהָ֔ב וְכֵלִ֖ים מִכֵּלִ֣ים שׁוֹנִ֑ים וְיֵ֥ין מַלְכ֛וּת רָ֖ב כְּיַ֥ד הַמֶּֽלֶךְ׃
+          וְהַשְּׁתִיָּ֥ה כַדָּ֖ת אֵ֣ין אֹנֵ֑ס כִּי־ כֵ֣ן ׀ יִסַּ֣ד הַמֶּ֗לֶךְ עַ֚ל כָּל־ רַ֣ב בֵּית֔וֹ לַֽעֲשׂ֖וֹת כִּרְצ֥וֹן אִישׁ־ וָאִֽישׁ׃
+          c
+          גַּ֚ם וַשְׁתִּ֣י הַמַּלְכָּ֔ה עָֽשְׂתָ֖ה מִשְׁתֵּ֣ה נָשִׁ֑ים בֵּ֚ית הַמַּלְכ֔וּת אֲשֶׁ֖ר לַמֶּ֥לֶךְ אֲחַשְׁוֵרֽוֹשׁ׃
+          בַּיּוֹם֙ הַשְּׁבִיעִ֔י כְּט֥וֹב לֵב־ הַמֶּ֖לֶךְ בַּיָּ֑יִן אָמַ֡ר לִ֠מְהוּמָן בִּזְּתָ֨א חַרְבוֹנָ֜א בִּגְתָ֤א וַֽאֲבַגְתָא֙ זֵתַ֣ר וְכַרְכַּ֔ס שִׁבְעַת֙ הַסָּ֣רִיסִ֔ים הַמְשָׁ֣רְתִ֔ים אֶת־ פְּנֵ֖י הַמֶּ֥לֶךְ אֲחַשְׁוֵרֽוֹשׁ׃
+          לְ֠הָבִיא אֶת־ וַשְׁתִּ֧י הַמַּלְכָּ֛ה לִפְנֵ֥י הַמֶּ֖לֶךְ בְּכֶ֣תֶר מַלְכ֑וּת לְהַרְא֨וֹת הָֽעַמִּ֤ים וְהַשָּׂרִים֙ אֶת־ יָפְיָ֔הּ כִּֽי־ טוֹבַ֥ת מַרְאֶ֖ה הִֽיא׃
+          וַתְּמָאֵ֞ן הַמַּלְכָּ֣ה וַשְׁתִּ֗י לָבוֹא֙ בִּדְבַ֣ר הַמֶּ֔לֶךְ אֲשֶׁ֖ר בְּיַ֣ד הַסָּֽרִיסִ֑ים וַיִּקְצֹ֤ף הַמֶּ֨לֶךְ֙ מְאֹ֔ד וַֽחֲמָת֖וֹ בָּֽעֲרָ֥ה בֽוֹ׃
+          c
+          וַיֹּ֣אמֶר הַמֶּ֔לֶךְ לַֽחֲכָמִ֖ים יֹֽדְעֵ֣י הָֽעִתִּ֑ים כִּי־ כֵן֙ דְּבַ֣ר הַמֶּ֔לֶךְ לִפְנֵ֕י כָּל־ יֹֽדְעֵ֖י דָּ֥ת וָדִֽין׃
+          וְהַקָּרֹ֣ב אֵלָ֗יו כַּרְשְׁנָ֤א שֵׁתָר֙ אַדְמָ֣תָא תַרְשִׁ֔ישׁ מֶ֥רֶס מַרְסְנָ֖א מְמוּכָ֑ן שִׁבְעַ֞ת שָׂרֵ֣י ׀ פָּרַ֣ס וּמָדַ֗י רֹאֵי֙ פְּנֵ֣י הַמֶּ֔לֶךְ הַיֹּֽשְׁבִ֥ים רִֽאשֹׁנָ֖ה בַּמַּלְכֽוּת׃
+          כְּדָת֙ מַֽה־ לַּעֲשׂ֔וֹת בַּמַּלְכָּ֖ה וַשְׁתִּ֑י עַ֣ל ׀ אֲשֶׁ֣ר לֹֽא־ עָשְׂתָ֗ה אֶֽת־ מַאֲמַר֙ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֔וֹשׁ בְּיַ֖ד הַסָּֽרִיסִֽים׃
+          c
+          וַיֹּ֣אמֶר מומכן מְמוּכָ֗ן לִפְנֵ֤י הַמֶּ֨לֶךְ֙ וְהַשָּׂרִ֔ים לֹ֤א עַל־ הַמֶּ֨לֶךְ֙ לְבַדּ֔וֹ עָֽוְתָ֖ה וַשְׁתִּ֣י הַמַּלְכָּ֑ה כִּ֤י עַל־ כָּל־ הַשָּׂרִים֙ וְעַל־ כָּל־ הָ֣עַמִּ֔ים אֲשֶׁ֕ר בְּכָל־ מְדִינ֖וֹת הַמֶּ֥לֶךְ אֲחַשְׁוֵרֽוֹשׁ׃
+          כִּֽי־ יֵצֵ֤א דְבַר־ הַמַּלְכָּה֙ עַל־ כָּל־ הַנָּשִׁ֔ים לְהַבְז֥וֹת בַּעְלֵיהֶ֖ן בְּעֵֽינֵיהֶ֑ן בְּאָמְרָ֗ם הַמֶּ֣לֶךְ אֲחַשְׁוֵר֡וֹשׁ אָמַ֞ר לְהָבִ֨יא אֶת־ וַשְׁתִּ֧י הַמַּלְכָּ֛ה לְפָנָ֖יו וְלֹא־ בָֽאָה׃
+          וְֽהַיּ֨וֹם הַזֶּ֜ה תֹּאמַ֣רְנָה ׀ שָׂר֣וֹת פָּֽרַס־ וּמָדַ֗י אֲשֶׁ֤ר שָֽׁמְעוּ֙ אֶת־ דְּבַ֣ר הַמַּלְכָּ֔ה לְכֹ֖ל שָׂרֵ֣י הַמֶּ֑לֶךְ וּכְדַ֖י בִּזָּי֥וֹן וָקָֽצֶף׃
+          אִם־ עַל־ הַמֶּ֣לֶךְ ט֗וֹב יֵצֵ֤א דְבַר־ מַלְכוּת֙ מִלְּפָנָ֔יו וְיִכָּתֵ֛ב בְּדָתֵ֥י פָֽרַס־ וּמָדַ֖י וְלֹ֣א יַֽעֲב֑וֹר אֲשֶׁ֨ר לֹֽא־ תָב֜וֹא וַשְׁתִּ֗י לִפְנֵי֙ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֔וֹשׁ וּמַלְכוּתָהּ֙ יִתֵּ֣ן הַמֶּ֔לֶךְ לִרְעוּתָ֖הּ הַטּוֹבָ֥ה מִמֶּֽנָּה׃
+          וְנִשְׁמַע֩ פִּתְגָ֨ם הַמֶּ֤לֶךְ אֲשֶֽׁר־ יַעֲשֶׂה֙ בְּכָל־ מַלְכוּת֔וֹ כִּ֥י רַבָּ֖ה הִ֑יא וְכָל־ הַנָּשִׁ֗ים יִתְּנ֤וּ יְקָר֙ לְבַעְלֵיהֶ֔ן לְמִגָּד֖וֹל וְעַד־ קָטָֽן׃
+          וַיִּיטַב֙ הַדָּבָ֔ר בְּעֵינֵ֥י הַמֶּ֖לֶךְ וְהַשָּׂרִ֑ים וַיַּ֥עַשׂ הַמֶּ֖לֶךְ כִּדְבַ֥ר מְמוּכָֽן׃
+          וַיִּשְׁלַ֤ח סְפָרִים֙ אֶל־ כָּל־ מְדִינ֣וֹת הַמֶּ֔לֶךְ אֶל־ מְדִינָ֤ה וּמְדִינָה֙ כִּכְתָבָ֔הּ וְאֶל־ עַ֥ם וָעָ֖ם כִּלְשׁוֹנ֑וֹ לִֽהְי֤וֹת כָּל־ אִישׁ֙ שֹׂרֵ֣ר בְּבֵית֔וֹ וּמְדַבֵּ֖ר כִּלְשׁ֥וֹן עַמּֽוֹ׃
+          c
+        </p>
+        <p>
+          אַחַר֙ הַדְּבָרִ֣ים הָאֵ֔לֶּה כְּשֹׁ֕ךְ חֲמַ֖ת הַמֶּ֣לֶךְ אֲחַשְׁוֵר֑וֹשׁ זָכַ֤ר אֶת־ וַשְׁתִּי֙ וְאֵ֣ת אֲשֶׁר־ עָשָׂ֔תָה וְאֵ֥ת אֲשֶׁר־ נִגְזַ֖ר עָלֶֽיהָ׃
+          וַיֹּֽאמְר֥וּ נַעֲרֵֽי־ הַמֶּ֖לֶךְ מְשָֽׁרְתָ֑יו יְבַקְשׁ֥וּ לַמֶּ֛לֶךְ נְעָר֥וֹת בְּתוּל֖וֹת טוֹב֥וֹת מַרְאֶֽה׃
+          וְיַפְקֵ֨ד הַמֶּ֣לֶךְ פְּקִידִים֮ בְּכָל־ מְדִינ֣וֹת מַלְכוּתוֹ֒ וְיִקְבְּצ֣וּ אֶת־ כָּל־ נַעֲרָֽה־ בְ֠תוּלָה טוֹבַ֨ת מַרְאֶ֜ה אֶל־ שׁוּשַׁ֤ן הַבִּירָה֙ אֶל־ בֵּ֣ית הַנָּשִׁ֔ים אֶל־ יַ֥ד הֵגֶ֛א סְרִ֥יס הַמֶּ֖לֶךְ שֹׁמֵ֣ר הַנָּשִׁ֑ים וְנָת֖וֹן תַּמְרֻֽקֵיהֶֽן׃
+          וְהַֽנַּעֲרָ֗ה אֲשֶׁ֤ר תִּיטַב֙ בְּעֵינֵ֣י הַמֶּ֔לֶךְ תִּמְלֹ֖ךְ תַּ֣חַת וַשְׁתִּ֑י וַיִּיטַ֧ב הַדָּבָ֛ר בְּעֵינֵ֥י הַמֶּ֖לֶךְ וַיַּ֥עַשׂ כֵּֽן׃
+          c
+          אִ֣ישׁ יְהוּדִ֔י הָיָ֖ה בְּשׁוּשַׁ֣ן הַבִּירָ֑ה וּשְׁמ֣וֹ מָרְדֳּכַ֗י בֶּ֣ן יָאִ֧יר בֶּן־ שִׁמְעִ֛י בֶּן־ קִ֖ישׁ אִ֥ישׁ יְמִינִֽי׃
+          אֲשֶׁ֤ר הָגְלָה֙ מִיר֣וּשָׁלַ֔יִם עִם־ הַגֹּלָה֙ אֲשֶׁ֣ר הָגְלְתָ֔ה עִ֖ם יְכָנְיָ֣ה מֶֽלֶךְ־ יְהוּדָ֑ה אֲשֶׁ֣ר הֶגְלָ֔ה נְבֽוּכַדְנֶצַּ֖ר מֶ֥לֶךְ בָּבֶֽל׃
+          וַיְהִ֨י אֹמֵ֜ן אֶת־ הֲדַסָּ֗ה הִ֤יא אֶסְתֵּר֙ בַּת־ דֹּד֔וֹ כִּ֛י אֵ֥ין לָ֖הּ אָ֣ב וָאֵ֑ם וְהַנַּֽעֲרָ֤ה יְפַת־ תֹּ֨אַר֙ וְטוֹבַ֣ת מַרְאֶ֔ה וּבְמ֤וֹת אָבִ֨יהָ֙ וְאִמָּ֔הּ לְקָחָ֧הּ מָרְדֳּכַ֛י ל֖וֹ לְבַֽת׃
+          וַיְהִ֗י בְּהִשָּׁמַ֤ע דְּבַר־ הַמֶּ֨לֶךְ֙ וְדָת֔וֹ וּֽבְהִקָּבֵ֞ץ נְעָר֥וֹת רַבּ֛וֹת אֶל־ שׁוּשַׁ֥ן הַבִּירָ֖ה אֶל־ יַ֣ד הֵגָ֑י וַתִּלָּקַ֤ח אֶסְתֵּר֙ אֶל־ בֵּ֣ית הַמֶּ֔לֶךְ אֶל־ יַ֥ד הֵגַ֖י שֹׁמֵ֥ר הַנָּשִֽׁים׃
+          וַתִּיטַ֨ב הַנַּֽעֲרָ֣ה בְעֵינָיו֮ וַתִּשָּׂ֣א חֶ֣סֶד לְפָנָיו֒ וַ֠יְבַהֵל אֶת־ תַּמְרוּקֶ֤יהָ וְאֶת־ מָֽנוֹתֶ֨הָ֙ לָתֵ֣ת לָ֔הּ וְאֵת֙ שֶׁ֣בַע הַנְּעָר֔וֹת הָֽרְאֻי֥וֹת לָֽתֶת־ לָ֖הּ מִבֵּ֣ית הַמֶּ֑לֶךְ וַיְשַׁנֶּ֧הָ וְאֶת־ נַֽעֲרוֹתֶ֛יהָ לְט֖וֹב בֵּ֥ית הַנָּשִֽׁים׃ 
+          לֹֽא־ הִגִּ֣ידָה אֶסְתֵּ֔ר אֶת־ עַמָּ֖הּ וְאֶת־ מֽוֹלַדְתָּ֑הּ כִּ֧י מָרְדֳּכַ֛י צִוָּ֥ה עָלֶ֖יהָ אֲשֶׁ֥ר לֹֽא־ תַגִּֽיד׃ 
+          וּבְכָל־ י֣וֹם וָי֔וֹם מָרְדֳּכַי֙ מִתְהַלֵּ֔ךְ לִפְנֵ֖י חֲצַ֣ר בֵּית־ הַנָּשִׁ֑ים לָדַ֨עַת֙ אֶת־ שְׁל֣וֹם אֶסְתֵּ֔ר וּמַה־ יֵּֽעָשֶׂ֖ה בָּֽהּ׃ 
+          וּבְהַגִּ֡יעַ תֹּר֩ נַֽעֲרָ֨ה וְנַֽעֲרָ֜ה לָב֣וֹא ׀ אֶל־ הַמֶּ֣לֶךְ אֲחַשְׁוֵר֗וֹשׁ מִקֵּץ֩ הֱי֨וֹת לָ֜הּ כְּדָ֤ת הַנָּשִׁים֙ שְׁנֵ֣ים עָשָׂ֣ר חֹ֔דֶשׁ כִּ֛י כֵּ֥ן יִמְלְא֖וּ יְמֵ֣י מְרֽוּקֵיהֶ֑ן שִׁשָּׁ֤ה חֳדָשִׁים֙ בְּשֶׁ֣מֶן הַמֹּ֔ר וְשִׁשָּׁ֤ה חֳדָשִׁים֙ בַּבְּשָׂמִ֔ים וּבְתַמְרוּקֵ֖י הַנָּשִֽׁים׃ 
+          וּבָזֶ֕ה הַֽנַּעֲרָ֖ה בָּאָ֣ה אֶל־ הַמֶּ֑לֶךְ אֵת֩ כָּל־ אֲשֶׁ֨ר תֹּאמַ֜ר יִנָּ֤תֵֽן לָהּ֙ לָב֣וֹא עִמָּ֔הּ מִבֵּ֥ית הַנָּשִׁ֖ים עַד־ בֵּ֥ית הַמֶּֽלֶךְ׃ 
+          בָּעֶ֣רֶב ׀ הִ֣יא בָאָ֗ה וּ֠בַבֹּקֶר הִ֣יא שָׁבָ֞ה אֶל־ בֵּ֤ית הַנָּשִׁים֙ שֵׁנִ֔י אֶל־ יַ֧ד שַֽׁעַשְׁגַ֛ז סְרִ֥יס הַמֶּ֖לֶךְ שֹׁמֵ֣ר הַפִּֽילַגְשִׁ֑ים לֹֽא־ תָב֥וֹא עוֹד֙ אֶל־ הַמֶּ֔לֶךְ כִּ֣י אִם־ חָפֵ֥ץ בָּ֛הּ הַמֶּ֖לֶךְ וְנִקְרְאָ֥ה בְשֵֽׁם׃ 
+          וּבְהַגִּ֣יעַ תֹּר־ אֶסְתֵּ֣ר בַּת־ אֲבִיחַ֣יִל דֹּ֣ד מָרְדֳּכַ֡י אֲשֶׁר֩ לָקַֽח־ ל֨וֹ לְבַ֜ת לָב֣וֹא אֶל־ הַמֶּ֗לֶךְ לֹ֤א בִקְשָׁה֙ דָּבָ֔ר כִּ֠י אִ֣ם אֶת־ אֲשֶׁ֥ר יֹאמַ֛ר הֵגַ֥י סְרִיס־ הַמֶּ֖לֶךְ שֹׁמֵ֣ר הַנָּשִׁ֑ים וַתְּהִ֤י אֶסְתֵּר֙ נֹשֵׂ֣את חֵ֔ן בְּעֵינֵ֖י כָּל־ רֹאֶֽיהָ׃ 
+          וַתִּלָּקַ֨ח אֶסְתֵּ֜ר אֶל־ הַמֶּ֤לֶךְ אֲחַשְׁוֵרוֹשׁ֙ אֶל־ בֵּ֣ית מַלְכוּת֔וֹ בַּחֹ֥דֶשׁ הָֽעֲשִׂירִ֖י הוּא־ חֹ֣דֶשׁ טֵבֵ֑ת בִּשְׁנַת־ שֶׁ֖בַע לְמַלְכוּתֽוֹ׃ 
+          וַיֶּֽאֱהַ֨ב הַמֶּ֤לֶךְ אֶת־ אֶסְתֵּר֙ מִכָּל־ הַנָּשִׁ֔ים וַתִּשָּׂא־ חֵ֥ן וָחֶ֛סֶד לְפָנָ֖יו מִכָּל־ הַבְּתוּל֑וֹת וַיָּ֤שֶׂם כֶּֽתֶר־ מַלְכוּת֙ בְּרֹאשָׁ֔הּ וַיַּמְלִיכֶ֖הָ תַּ֥חַת וַשְׁתִּֽי׃ 
+          וַיַּ֨עַשׂ הַמֶּ֜לֶךְ מִשְׁתֶּ֣ה גָד֗וֹל לְכָל־ שָׂרָיו֙ וַֽעֲבָדָ֔יו אֵ֖ת מִשְׁתֵּ֣ה אֶסְתֵּ֑ר וַֽהֲנָחָ֤ה לַמְּדִינוֹת֙ עָשָׂ֔ה וַיִּתֵּ֥ן מַשְׂאֵ֖ת כְּיַ֥ד הַמֶּֽלֶךְ׃ 
+          וּבְהִקָּבֵ֥ץ בְּתוּל֖וֹת שֵׁנִ֑ית וּמָרְדֳּכַ֖י יֹשֵׁ֥ב בְּשַֽׁעַר־ הַמֶּֽלֶךְ׃ 
+          אֵ֣ין אֶסְתֵּ֗ר מַגֶּ֤דֶת מֽוֹלַדְתָּהּ֙ וְאֶת־ עַמָּ֔הּ כַּֽאֲשֶׁ֛ר צִוָּ֥ה עָלֶ֖יהָ מָרְדֳּכָ֑י וְאֶת־ מַֽאֲמַ֤ר מָרְדֳּכַי֙ אֶסְתֵּ֣ר עֹשָׂ֔ה כַּֽאֲשֶׁ֛ר הָֽיְתָ֥ה בְאָמְנָ֖ה אִתּֽוֹ׃ 
+          c 
+          בַּיָּמִ֣ים הָהֵ֔ם וּמָרְדֳּכַ֖י יוֹשֵׁ֣ב בְּשַֽׁעַר־ הַמֶּ֑לֶךְ קָצַף֩ בִּגְתָ֨ן וָתֶ֜רֶשׁ שְׁנֵֽי־ סָרִיסֵ֤י הַמֶּ֨לֶךְ֙ מִשֹּֽׁמְרֵ֣י הַסַּ֔ף וַיְבַקְשׁוּ֙ לִשְׁלֹ֣חַ יָ֔ד בַּמֶּ֖לֶךְ אֲחַשְׁוֵרֹֽשׁ׃ 
+          וַיִּוָּדַ֤ע הַדָּבָר֙ לְמָרְדֳּכַ֔י וַיַּגֵּ֖ד לְאֶסְתֵּ֣ר הַמַּלְכָּ֑ה וַתֹּ֧אמֶר אֶסְתֵּ֛ר לַמֶּ֖לֶךְ בְּשֵׁ֥ם מָרְדֳּכָֽי׃ 
+          וַיְבֻקַּ֤שׁ הַדָּבָר֙ וַיִּמָּצֵ֔א וַיִּתָּל֥וּ שְׁנֵיהֶ֖ם עַל־ עֵ֑ץ וַיִּכָּתֵ֗ב בְּסֵ֛פֶר דִּבְרֵ֥י הַיָּמִ֖ים לִפְנֵ֥י הַמֶּֽלֶךְ׃
+          c
+        </p>
+      </div>
+      <div class="column modified" id="modified-div">
+        <p>
+          ויהי בימי אחשורוש הוא אחשורוש המלך מהדו ועד כוש שבע ועשרים ומאה מדינה
+          בימים ההם כשבת המלך אחשורוש על כסא מלכותו אשר בשושן הבירה
+          בשנת שלוש למלכו עשה משתה לכל שריו ועבדיו חיל  פרס ומדי הפרתמים ושרי המדינות לפניו בהראתו את עשר כבוד מלכותו ואת יקר תפארת גדולתו ימים רבים שמונים ומאת יום
+          ובמלואת  הימים האלה עשה המלך לכל העם הנמצאים בשושן הבירה למגדול ועד קטן
+          משתה שבעת ימים בחצר גנת ביתן המלך חור  כרפס ותכלת אחוז בחבלי בוץ וארגמן על גלילי כסף ועמודי שש מטות זהב וכסף על רצפת בהט ושש ודר וסחרת
+          והשקות בכלי זהב וכלים מכלים שונים ויין מלכות רב כיד המלך והשתיה כדת אין אנס כי כן  יסד המלך על כל רב ביתו לעשות כרצון איש ואיש
+          
+          גם ושתי המלכה עשתה משתה נשים בית המלכות אשר למלך אחשורוש 
+          ביום השביעי כטוב לב המלך ביין אמר למהומן בזתא חרבונא בגתא ואבגתא זתר וכרכס שבעת הסריסים המשרתים את פני המלך אחשורוש
+          להביא את ושתי המלכה לפני המלך בכתר מלכות להראות העמים והשרים את יפיה כי טובת מראה היא 
+          ותמאן המלכה ושתי לבוא בדבר המלך אשר ביד הסריסים ויקצף המלך מאד וחמתו בערה בו
+          
+          ויאמר המלך לחכמים ידעי העתים כי כן דבר המלך לפני כל ידעי דת ודין
+          והקרב אליו כרשנא שתר אדמתא תרשיש מרס מרסנא ממוכן שבעת שרי  פרס ומדי ראי פני המלך הישבים ראשנה במלכות
+          כדת מה לעשות במלכה ושתי על  אשר לא עשתה את מאמר המלך אחשורוש ביד הסריסים
+          
+          ויאמר מומכן ממוכן לפני המלך והשרים לא על המלך לבדו עותה ושתי המלכה כי על כל השרים ועל כל העמים אשר בכל מדינות המלך אחשורוש
+          כי יצא דבר המלכה על כל הנשים להבזות בעליהן בעיניהן באמרם המלך אחשורוש אמר להביא את ושתי המלכה לפניו ולא באה
+          והיום הזה תאמרנה  שרות פרס ומדי אשר שמעו את דבר המלכה לכל שרי המלך וכדי בזיון וקצף
+          אם על המלך טוב יצא דבר מלכות מלפניו ויכתב בדתי פרס ומדי ולא יעבור אשר לא תבוא ושתי לפני המלך אחשורוש ומלכותה יתן המלך לרעותה הטובה ממנה
+          ונשמע פתגם המלך אשר יעשה בכל מלכותו כי רבה היא וכל הנשים יתנו יקר לבעליהן למגדול ועד קטן
+          וייטב הדבר בעיני המלך והשרים ויעש המלך כדבר ממוכן
+          וישלח ספרים אל כל מדינות המלך אל מדינה ומדינה ככתבה ואל עם ועם כלשונו להיות כל איש שרר בביתו ומדבר כלשון עמו
+        </p>
+        <p>
+          אחר הדברים האלה כשך חמת המלך אחשורוש זכר את ושתי ואת אשר עשתה ואת אשר נגזר עליה
+          ויאמרו נערי המלך משרתיו יבקשו למלך נערות בתולות טובות מראה
+          ויפקד המלך פקידים בכל מדינות מלכותו ויקבצו את כל נערה בתולה טובת מראה אל שושן הבירה אל בית הנשים אל יד הגא סריס המלך שמר הנשים ונתון תמרקיהן
+          והנערה אשר תיטב בעיני המלך תמלך תחת ושתי וייטב הדבר בעיני המלך ויעש כן
+          
+          איש יהודי היה בשושן הבירה ושמו מרדכי בן יאיר בן שמעי בן קיש איש ימיני
+          אשר הגלה מירושלים עם הגלה אשר הגלתה עם יכניה מלך יהודה אשר הגלה נבוכדנצר מלך בבל
+          ויהי אמן את הדסה היא אסתר בת דדו כי אין לה אב ואם והנערה יפת תאר וטובת מראה ובמות אביה ואמה לקחה מרדכי לו לבת
+          ויהי בהשמע דבר המלך ודתו ובהקבץ נערות רבות אל שושן הבירה אל יד הגי ותלקח אסתר אל בית המלך אל יד הגי שמר הנשים
+          ותיטב הנערה בעיניו ותשא חסד לפניו ויבהל את תמרוקיה ואת מנותה לתת לה ואת שבע הנערות הראיות לתת לה מבית המלך וישנה ואת נערותיה לטוב בית הנשים 
+          לא הגידה אסתר את עמה ואת מולדתה כי מרדכי צוה עליה אשר לא תגיד 
+          ובכל יום ויום מרדכי מתהלך לפני חצר בית הנשים לדעת את שלום אסתר ומה יעשה בה 
+          ובהגיע תר נערה ונערה לבוא אל המלך אחשורוש מקץ היות לה כדת הנשים שנים עשר חדש כי כן ימלאו ימי מרוקיהן ששה חדשים בשמן המר וששה חדשים בבשמים ובתמרוקי הנשים 
+          ובזה הנערה באה אל המלך את כל אשר תאמר ינתן לה לבוא עמה מבית הנשים עד בית המלך 
+          בערב היא באה ובבקר היא שבה אל בית הנשים שני אל יד שעשגז סריס המלך שמר הפילגשים לא תבוא עוד אל המלך כי אם חפץ בה המלך ונקראה בשם 
+          ובהגיע תר אסתר בת אביחיל דד מרדכי אשר לקח לו לבת לבוא אל המלך לא בקשה דבר כי אם את אשר יאמר הגי סריס המלך שמר הנשים ותהי אסתר נשאת חן בעיני כל ראיה 
+          ותלקח אסתר אל המלך אחשורוש אל בית מלכותו בחדש העשירי הוא חדש טבת בשנת שבע למלכותו 
+          ויאהב המלך את אסתר מכל הנשים ותשא חן וחסד לפניו מכל הבתולות וישם כתר מלכות בראשה וימליכה תחת ושתי 
+          ויעש המלך משתה גדול לכל שריו ועבדיו את משתה אסתר והנחה למדינות עשה ויתן משאת כיד המלך 
+          ובהקבץ בתולות שנית ומרדכי ישב בשער המלך 
+          אין אסתר מגדת מולדתה ואת עמה כאשר צוה עליה מרדכי ואת מאמר מרדכי אסתר עשה כאשר היתה באמנה אתו 
+          
+          בימים ההם ומרדכי יושב בשער המלך קצף בגתן ותרש שני סריסי המלך משמרי הסף ויבקשו לשלח יד במלך אחשורש 
+          ויודע הדבר למרדכי ויגד לאסתר המלכה ותאמר אסתר למלך בשם מרדכי 
+          ויבקש הדבר וימצא ויתלו שניהם על עץ ויכתב בספר דברי הימים לפני המלך
+        </p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
